@@ -7,6 +7,8 @@ import { CienciaComunicado } from '../comunicados/ciencia-comunicado.entity';
 import { Evento } from '../eventos/evento.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
+import { Nota } from '../boletim/nota.entity';
+import { MIGRACOES } from '../database/migrations';
 
 export const ENTIDADES = [
   Usuario,
@@ -17,6 +19,7 @@ export const ENTIDADES = [
   Evento,
   Conversa,
   Mensagem,
+  Nota,
 ];
 
 type Env = (key: string) => string | undefined;
@@ -33,11 +36,15 @@ export function typeormOptions(env: Env): DataSourceOptions {
         password: env('DB_PASSWORD'),
         database: env('DB_NAME'),
       };
+  const sync = env('DB_SYNC') === 'true';
   return {
     type: 'postgres',
     ...conexao,
     ssl,
     entities: ENTIDADES,
-    synchronize: env('DB_SYNC') === 'true',
+    migrations: MIGRACOES,
+    synchronize: sync,
+    // Sem DB_SYNC (produção), a API aplica as migrations pendentes ao subir.
+    migrationsRun: !sync,
   };
 }
