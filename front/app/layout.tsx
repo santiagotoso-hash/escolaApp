@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AuthProvider from "@/components/AuthProvider";
+import { ConfirmacaoProvider } from "@/components/Confirmacao";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <body className="min-h-dvh antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ConfirmacaoProvider>{children}</ConfirmacaoProvider>
+        </AuthProvider>
       </body>
     </html>
   );

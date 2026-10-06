@@ -1,6 +1,6 @@
 # Escola Conecta
 
-Comunicação entre a escola e as famílias dos alunos: **comunicados com confirmação de leitura**, **agenda escolar** e **mensagens diretas** entre responsáveis e professores.
+Comunicação entre a escola e as famílias dos alunos: **comunicados com confirmação de leitura**, **agenda e calendário escolar** (com os feriados nacionais), **provas**, **boletim**, **ficha de saúde e alergias**, **mensagens diretas** entre responsáveis e professores e **parabéns automáticos no aniversário** do aluno (mensagem para a família e aviso por e-mail aos professores da turma, às 7h).
 
 | Pasta    | Stack                                                        | Porta |
 | -------- | ------------------------------------------------------------ | ----- |
@@ -11,9 +11,9 @@ Comunicação entre a escola e as famílias dos alunos: **comunicados com confir
 
 | Papel           | O que faz                                                                                         |
 | --------------- | ------------------------------------------------------------------------------------------------- |
-| **Direção** (`admin`) | Tudo: cadastra usuários, turmas e alunos; publica para a escola inteira; vê quem confirmou cada comunicado. |
-| **Professor**   | Vê as suas turmas e alunos; publica comunicados e eventos para as suas turmas; responde às famílias. |
-| **Responsável** | Vê os filhos, os comunicados e a agenda da escola e das turmas deles; confirma ciência; conversa com a escola. |
+| **Direção** (`admin`) | Tudo: cadastra usuários, turmas e alunos; publica para a escola inteira; vê quem confirmou cada comunicado; lança notas e edita fichas de saúde; edita a ficha dos professores (com anotações internas). |
+| **Professor**   | Vê as suas turmas e alunos; publica comunicados, eventos e provas para as suas turmas; lança notas; consulta alergias; vê o contato dos colegas e edita a própria ficha; responde às famílias. |
+| **Responsável** | Vê os filhos, os comunicados, a agenda, as provas e o boletim deles; confirma ciência; preenche a ficha de saúde; conversa com a escola. |
 
 A regra de "quem enxerga o quê" está num só lugar: `back/src/common/acesso/acesso.service.ts`.
 
@@ -66,11 +66,17 @@ Tudo exige `Authorization: Bearer <token>`, exceto `POST /auth/entrar` e `GET /s
 | GET    | `/comunicados`                | todos (filtrado) |
 | POST/DELETE | `/comunicados`           | equipe           |
 | POST   | `/comunicados/:id/ciencia`    | responsável      |
-| GET    | `/eventos?de=&ate=`           | todos (filtrado) |
+| GET    | `/eventos?de=&ate=&tipo=`     | todos (filtrado) |
 | POST/DELETE | `/eventos`               | equipe           |
 | GET/POST | `/conversas`                | todos (filtrado) |
 | GET    | `/conversas/:id` (marca como lida) | participantes |
 | POST   | `/conversas/:id/mensagens`    | participantes    |
+| PATCH  | `/alunos/:id/saude`, `/alunos/:id/nascimento` | direção, responsável do aluno |
+| GET    | `/professores`                | equipe (colegas: só contato) |
+| PATCH  | `/professores/:id`            | direção; professor só a própria ficha |
+| GET    | `/boletim/disciplinas`        | todos            |
+| GET    | `/boletim/alunos/:id?ano=`    | todos (filtrado) |
+| GET/PUT | `/boletim/turmas/:id?disciplina=&bimestre=` | equipe (turmas dela) |
 
 ## Banco em produção (Supabase, Neon, Render…)
 
@@ -82,13 +88,23 @@ DB_SSL=true
 DB_SYNC=false
 ```
 
-`DB_SYNC=true` cria as tabelas automaticamente a partir das entidades — prático no desenvolvimento, arriscado em produção. Antes de publicar, troque por migrations do TypeORM.
+Com `DB_SYNC=false`, a API aplica sozinha as migrations pendentes (`back/src/database/migrations`) toda vez que sobe — não é preciso rodar SQL à mão. Num banco vazio, a primeira migration cria todas as tabelas; num banco que já existia (criado com `DB_SYNC=true`), ela não faz nada e só as seguintes são aplicadas.
+
+`DB_SYNC=true` (desenvolvimento) cria/atualiza as tabelas direto a partir das entidades e ignora as migrations.
+
+### Mudou uma entidade? Gere uma migration
+
+1. Aponte o `back/.env` para um banco no esquema **anterior** à mudança (por exemplo, um banco local com `DB_SYNC=false` e `npm run migration:run`).
+2. `npm run migration:generate -- src/database/migrations/NomeDaMudanca`
+3. Revise o SQL gerado e adicione a classe em `src/database/migrations/index.ts`.
+
+Outros comandos: `npm run migration:show` (o que já foi aplicado), `npm run migration:run`, `npm run migration:revert` (desfaz a última).
 
 ## Próximos passos sugeridos
 
-- Migrations do TypeORM (hoje o esquema vem do `DB_SYNC`).
 - Recuperação de senha por e-mail (hoje a secretaria redefine).
-- Notificações (e-mail / push) quando sai um comunicado ou chega mensagem.
+- Notificações push (o aviso por e-mail já existe).
 - Mensagens em tempo real (WebSocket); hoje a conversa aberta atualiza a cada 15 s.
 - Anexos em comunicados (PDF, fotos) e autorizações de passeio com assinatura.
-- Frequência e boletim.
+- Frequência (chamada).
+- Disciplinas configuráveis pela direção (hoje a lista fica em `back/src/common/disciplinas.ts`).
