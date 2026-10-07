@@ -38,7 +38,7 @@ function layout(opcoes: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-  <tr><td style="padding:0 4px 16px;font-weight:700;font-size:16px;color:${COR}">Escola Conecta</td></tr>
+  <tr><td style="padding:0 4px 16px;font-weight:700;font-size:16px;color:${COR}">MuralFlow</td></tr>
   <tr><td style="background:#FFFFFF;border:1px solid #E0E6E4;border-radius:12px;padding:28px">
     <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:${COR};text-transform:uppercase;letter-spacing:.04em">${esc(opcoes.etiqueta)}</p>
     <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3">${esc(opcoes.titulo)}</h1>
@@ -56,7 +56,7 @@ function layout(opcoes: {
 }
 
 const RODAPE =
-  'Você recebeu este e-mail porque tem uma conta no Escola Conecta. ' +
+  'Você recebeu este e-mail porque tem uma conta no MuralFlow. ' +
   'Para parar de receber avisos por e-mail, desative a opção em <b>Meu perfil</b>.';
 
 export function emailComunicado(dados: {
@@ -107,7 +107,7 @@ export function emailMensagem(dados: {
         `<p style="margin:0;padding:12px 16px;background:#F5F7F6;border-radius:8px">${paragrafos(dados.texto, 400)}</p>`,
       botao: { texto: 'Responder', url: dados.url },
       rodape:
-        'Por segurança, responda pelo Escola Conecta, não por este e-mail. ' +
+        'Por segurança, responda pelo MuralFlow, não por este e-mail. ' +
         RODAPE,
     }),
   };

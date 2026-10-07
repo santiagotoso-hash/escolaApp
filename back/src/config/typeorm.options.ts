@@ -1,3 +1,4 @@
+import * as pg from 'pg';
 import type { DataSourceOptions } from 'typeorm';
 import { Usuario } from '../usuarios/usuario.entity';
 import { Turma } from '../turmas/turma.entity';
@@ -39,6 +40,9 @@ export function typeormOptions(env: Env): DataSourceOptions {
   const sync = env('DB_SYNC') === 'true';
   return {
     type: 'postgres',
+    // Import explícito: o TypeORM carrega o `pg` dinamicamente e o bundler
+    // da Vercel o deixava de fora (DriverPackageNotInstalledError).
+    driver: pg,
     ...conexao,
     ssl,
     entities: ENTIDADES,

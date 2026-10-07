@@ -5,11 +5,12 @@
  *
  *   npm run seed
  *
- * APAGA todas as tabelas antes de inserir. Não rode contra o banco de produção.
+ * APAGA os dados de todas as tabelas antes de inserir. Não mexe no esquema:
+ * as tabelas vêm das migrations (`npm run migration:run`).
+ * Recusa rodar com NODE_ENV=production.
  */
 import 'dotenv/config';
 import * as bcrypt from 'bcrypt';
-import { DataSource } from 'typeorm';
 import { Aluno } from '../alunos/aluno.entity';
 import { Nota } from '../boletim/nota.entity';
 import { Papel } from '../common/enums/papel.enum';
@@ -18,12 +19,12 @@ import {
   CategoriaComunicado,
   Comunicado,
 } from '../comunicados/comunicado.entity';
-import { typeormOptions } from '../config/typeorm.options';
 import { Evento, TipoEvento } from '../eventos/evento.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
 import { Turma, Turno } from '../turmas/turma.entity';
 import { Usuario } from '../usuarios/usuario.entity';
+import ds from './data-source';
 
 const SENHA_DEMO = 'Senha@123';
 
@@ -36,11 +37,13 @@ function emDias(dias: number, hora = 8) {
 }
 
 async function main() {
-  const ds = new DataSource({
-    ...typeormOptions((k) => process.env[k]),
-    synchronize: true,
-  });
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('O seed não roda com NODE_ENV=production.');
+  }
   await ds.initialize();
+  if (await ds.showMigrations()) {
+    throw new Error('Há migrations pendentes. Rode antes: npm run migration:run');
+  }
   console.log('Conectado. Limpando tabelas...');
   const tabelas = ds.entityMetadatas.map((m) => `"${m.tableName}"`).join(', ');
   await ds.query(`TRUNCATE ${tabelas} RESTART IDENTITY CASCADE`);
@@ -52,9 +55,9 @@ async function main() {
       usuarios.create({ nome, email, papel, senhaHash, telefone: telefone ?? null }),
     );
 
-  const diretora = await criar('Ana Paula Ribeiro', 'direcao@escolaconecta.com.br', Papel.ADMIN);
-  const profCarla = await criar('Carla Mendes', 'carla@escolaconecta.com.br', Papel.PROFESSOR);
-  const profRoberto = await criar('Roberto Lima', 'roberto@escolaconecta.com.br', Papel.PROFESSOR);
+  const diretora = await criar('Ana Paula Ribeiro', 'direcao@muralflow.com.br', Papel.ADMIN);
+  const profCarla = await criar('Carla Mendes', 'carla@muralflow.com.br', Papel.PROFESSOR);
+  const profRoberto = await criar('Roberto Lima', 'roberto@muralflow.com.br', Papel.PROFESSOR);
   // Ficha dos professores.
   await usuarios.update(profCarla.id, {
     telefone: '(11) 97777-1234', dataNascimento: '1986-05-20', endereco: 'Rua das Acácias, 45 — Vila Mariana, São Paulo/SP',

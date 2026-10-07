@@ -41,6 +41,6 @@ export const envValidationSchema = Joi.object({
       is: Joi.string().min(1).required(),
       then: Joi.required(),
     }),
-  MAIL_FROM_NAME: Joi.string().default('Escola Conecta'),
+  MAIL_FROM_NAME: Joi.string().default('MuralFlow'),
   MAIL_FORCE_SEND: Joi.boolean().truthy('true').falsy('false').default(false),
 });

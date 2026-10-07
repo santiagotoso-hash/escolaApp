@@ -1,6 +1,6 @@
-import { EsquemaInicial1791100000000 } from './1791100000000-EsquemaInicial';
-import { ReceberEmails1791200000000 } from './1791200000000-ReceberEmails';
-import { ProvasBoletimSaude1791300000000 } from './1791300000000-ProvasBoletimSaude';
+import { EsquemaInicial1791322280071 } from './1791322280071-EsquemaInicial';
+import { ReceberEmails1791330000000 } from './1791330000000-ReceberEmails';
+import { ProvasBoletimSaude1791340000000 } from './1791340000000-ProvasBoletimSaude';
 import { Aniversarios1791400000000 } from './1791400000000-Aniversarios';
 import { FichaProfessor1791500000000 } from './1791500000000-FichaProfessor';
 
@@ -9,9 +9,9 @@ import { FichaProfessor1791500000000 } from './1791500000000-FichaProfessor';
  * (Lista explícita, como ENTIDADES: funciona igual em ts-node e no dist.)
  */
 export const MIGRACOES = [
-  EsquemaInicial1791100000000,
-  ReceberEmails1791200000000,
-  ProvasBoletimSaude1791300000000,
+  EsquemaInicial1791322280071,
+  ReceberEmails1791330000000,
+  ProvasBoletimSaude1791340000000,
   Aniversarios1791400000000,
   FichaProfessor1791500000000,
 ];

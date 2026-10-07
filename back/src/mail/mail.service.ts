@@ -64,7 +64,7 @@ export class MailService {
       await this.client.transactionalEmails.sendTransacEmail({
         sender: {
           email: this.config.getOrThrow<string>('MAIL_FROM_ADDRESS'),
-          name: this.config.get<string>('MAIL_FROM_NAME') ?? 'Escola Conecta',
+          name: this.config.get<string>('MAIL_FROM_NAME') ?? 'MuralFlow',
         },
         subject: assunto,
         htmlContent: html,
