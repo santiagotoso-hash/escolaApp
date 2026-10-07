@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { useSessao } from "@/components/AuthProvider";
 import { Cartao, Erro, Etiqueta } from "@/components/ui";
-import { aniversarioHoje, dataCurta, diasAte, hora, NOME_CATEGORIA, NOME_TIPO_EVENTO, tempoRelativo } from "@/lib/formatar";
+import { aniversarioHoje, dataCurta, diasAte, hora, NOME_CATEGORIA, NOME_TIPO_EVENTO, tempoRelativo, TRATAMENTO } from "@/lib/formatar";
 import type { Aluno, Comunicado, Conversa, Evento } from "@/lib/tipos";
 import { useApi } from "@/lib/use-api";
 
@@ -70,7 +70,7 @@ export default function Painel() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-text text-2xl font-bold">
-            {saudacao()}, {usuario.nome.split(" ")[0]}!
+            {saudacao()}, {TRATAMENTO[usuario.papel]} {usuario.nome.split(" ")[0]}!
           </h1>
           {familia && usuario.filhos && usuario.filhos.length > 0 && (
             <p className="text-text-secondary mt-1 text-sm">

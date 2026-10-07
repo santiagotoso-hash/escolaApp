@@ -59,6 +59,13 @@ export const NOME_PAPEL: Record<Papel, string> = {
   responsavel: "Responsável",
 };
 
+/** Tratamento na saudação do painel ("Bom dia, Pro Carla!"). */
+export const TRATAMENTO: Record<Papel, string> = {
+  admin: "Diretor/a",
+  professor: "Pro",
+  responsavel: "Pai/Mãe",
+};
+
 export const NOME_TURNO: Record<Turno, string> = {
   manha: "Manhã",
   tarde: "Tarde",

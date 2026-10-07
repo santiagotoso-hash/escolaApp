@@ -4,7 +4,7 @@ import { ConfirmacaoProvider } from "@/components/Confirmacao";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Escola Conecta — a escola e a família na mesma página",
+  title: "MuralFlow — a escola e a família na mesma página",
   description:
     "Comunicados, agenda e mensagens entre a escola e os responsáveis dos alunos, em um só lugar.",
 };

@@ -1,4 +1,4 @@
-# Escola Conecta
+# MuralFlow
 
 Comunicação entre a escola e as famílias dos alunos: **comunicados com confirmação de leitura**, **agenda e calendário escolar** (com os feriados nacionais), **provas**, **boletim**, **ficha de saúde e alergias**, **mensagens diretas** entre responsáveis e professores e **parabéns automáticos no aniversário** do aluno (mensagem para a família e aviso por e-mail aos professores da turma, às 7h).
 
@@ -44,9 +44,9 @@ Todos com a senha **`Senha@123`**:
 
 | Papel                         | E-mail                         |
 | ----------------------------- | ------------------------------ |
-| Direção                       | `direcao@escolaconecta.com.br` |
-| Professora do 5º Ano A        | `carla@escolaconecta.com.br`   |
-| Professor do 2º Ano B         | `roberto@escolaconecta.com.br` |
+| Direção                       | `direcao@muralflow.com.br` |
+| Professora do 5º Ano A        | `carla@muralflow.com.br`   |
+| Professor do 2º Ano B         | `roberto@muralflow.com.br` |
 | Mãe do Lucas e da Beatriz     | `maria@email.com`              |
 | Pai do Lucas e da Beatriz     | `joao@email.com`               |
 | Mãe do Gabriel                | `fernanda@email.com`           |
