@@ -121,4 +121,15 @@ export class RegistrarPagamentoDto {
   @ApiProperty({ enum: FormaPagamento })
   @IsEnum(FormaPagamento, { message: 'Escolha a forma de pagamento' })
   formaPagamento: FormaPagamento;
+
+  @ApiPropertyOptional({
+    example: 86500,
+    description:
+      'Valor que entrou/saiu de fato, em centavos. Vazio = o valor cheio.',
+  })
+  @IsOptional()
+  @IsInt({ message: 'Valor inválido' })
+  @Min(1, { message: 'O valor precisa ser maior que zero' })
+  @Max(VALOR_MAXIMO, { message: 'Valor alto demais' })
+  valorPagoCentavos?: number;
 }

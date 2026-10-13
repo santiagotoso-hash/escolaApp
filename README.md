@@ -14,7 +14,7 @@ Comunicação entre a escola e as famílias dos alunos: **comunicados com confir
 | **Direção** (`admin`) | Tudo: cadastra usuários, turmas e alunos; publica para a escola inteira; vê quem confirmou cada comunicado; lança notas e edita fichas de saúde; edita a ficha dos professores (com anotações internas). |
 | **Professor**   | Vê as suas turmas e alunos; publica comunicados, eventos e provas para as suas turmas; lança notas; consulta alergias; vê o contato dos colegas e edita a própria ficha; responde às famílias. |
 | **Responsável** | Vê os filhos, os comunicados, a agenda, as provas e o boletim deles; confirma ciência; preenche a ficha de saúde; conversa com a escola; consulta as cobranças dos filhos. |
-| **Financeiro**  | Só as finanças: lança cobranças (matrícula, mensalidade, uniforme, livros) para um aluno ou para a turma, dá baixa, edita e cancela; vê a lista de alunos com o contato dos responsáveis. Não acessa comunicados, agenda, mensagens, boletim nem saúde. |
+| **Financeiro**  | Só as finanças: lança cobranças (matrícula, mensalidade, uniforme, livros) para um aluno ou para a turma, registra o pagamento (com o valor recebido), edita e cancela; lança e paga as despesas da escola (aluguel, energia, manutenção…) em categorias que ele mesmo cria e renomeia; vê a lista de alunos com o contato dos responsáveis. Não acessa comunicados, agenda, mensagens, boletim nem saúde. |
 
 A regra de "quem enxerga o quê" está num só lugar: `back/src/common/acesso/acesso.service.ts`.
 
@@ -86,7 +86,13 @@ O papel **financeiro** é bloqueado por padrão (`PAPEIS_RESTRITOS`): só entra 
 | GET    | `/financeiro/alunos/:id`      | financeiro, direção; responsável só dos próprios filhos |
 | POST   | `/financeiro/cobrancas`       | financeiro, direção (um aluno ou a turma; `parcelas` mensais) |
 | PATCH  | `/financeiro/cobrancas/:id`   | financeiro, direção (editar, cancelar, reativar) |
-| POST/DELETE | `/financeiro/cobrancas/:id/pagamento` | financeiro, direção (dar e desfazer baixa) |
+| POST/DELETE | `/financeiro/cobrancas/:id/pagamento` | financeiro, direção (registrar e desfazer o pagamento; `valorPagoCentavos` opcional) |
+| GET/POST | `/financeiro/categorias`    | financeiro, direção (categorias de despesa) |
+| PATCH/DELETE | `/financeiro/categorias/:id` | financeiro, direção (renomear, desativar; excluir só sem despesas) |
+| GET    | `/financeiro/despesas?mes=AAAA-MM` | financeiro, direção (no mês atual, inclui as atrasadas) |
+| POST   | `/financeiro/despesas`        | financeiro, direção (`meses` repete todo mês) |
+| PATCH/DELETE | `/financeiro/despesas/:id` | financeiro, direção |
+| POST/DELETE | `/financeiro/despesas/:id/pagamento` | financeiro, direção |
 
 ## Banco em produção (Supabase, Neon, Render…)
 

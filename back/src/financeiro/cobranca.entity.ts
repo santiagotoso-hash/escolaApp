@@ -36,8 +36,8 @@ export enum FormaPagamento {
 
 /**
  * Uma cobrança de UM aluno: matrícula, uma mensalidade, uma compra de
- * uniforme ou de livros. O controle é manual: o financeiro lança e dá
- * baixa quando recebe (não há boleto nem Pix automático).
+ * uniforme ou de livros. O controle é manual: o financeiro lança e
+ * registra o pagamento quando recebe (não há boleto nem Pix automático).
  *
  * A situação (pendente, atrasada, paga, cancelada) não é gravada: sai de
  * `pagoEm`, `cancelada` e do vencimento comparado com hoje.
@@ -72,6 +72,10 @@ export class Cobranca {
   /** Dia em que a escola recebeu. null = ainda não paga. */
   @Column({ name: 'pago_em', type: 'date', nullable: true })
   pagoEm: string | null;
+
+  /** O que entrou de fato (com juros ou desconto). null = o valor cheio. */
+  @Column({ name: 'valor_pago_centavos', type: 'int', nullable: true })
+  valorPagoCentavos: number | null;
 
   @Column({
     name: 'forma_pagamento',

@@ -25,6 +25,11 @@ import {
   FormaPagamento,
   TipoCobranca,
 } from '../financeiro/cobranca.entity';
+import {
+  CATEGORIAS_PADRAO,
+  CategoriaDespesa,
+  Despesa,
+} from '../financeiro/despesa.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
 import { Turma, Turno } from '../turmas/turma.entity';
@@ -211,6 +216,35 @@ async function main() {
   await cobrancas.save(cobrancas.create({
     ...lancada, alunoId: beatriz.id, tipo: TipoCobranca.LIVROS, descricao: `Kit de livros ${ano + 1}`,
     valorCentavos: 45000, vencimento: dia(12, 20), observacao: 'Entrega dos livros na 1ª semana de aula.',
+  }));
+
+  // Despesas da escola: as categorias padrão (a migration também as cria,
+  // mas o TRUNCATE acima apagou) e as contas fixas do ano, pagas até o mês
+  // passado. A manutenção deste mês fica em aberto.
+  const categorias = ds.getRepository(CategoriaDespesa);
+  const [aluguel, energia, manutencao, internet] = await categorias.save(
+    CATEGORIAS_PADRAO.map((nome) => categorias.create({ nome })),
+  );
+  const despesas = ds.getRepository(Despesa);
+  const fixas: [CategoriaDespesa, number, number][] = [
+    [aluguel, 350000, 5],
+    [energia, 48000, 15],
+    [internet, 19990, 20],
+  ];
+  for (const [categoria, valorCentavos, diaDoMes] of fixas) {
+    for (let mes = 1; mes <= 12; mes++) {
+      const paga = mes < mesAtual;
+      await despesas.save(despesas.create({
+        ...lancada, categoriaId: categoria.id, descricao: `${categoria.nome} de ${nomeMes(mes)}`,
+        valorCentavos, vencimento: dia(mes, diaDoMes),
+        pagoEm: paga ? dia(mes, diaDoMes) : null, valorPagoCentavos: paga ? valorCentavos : null,
+        formaPagamento: paga ? FormaPagamento.BOLETO : null,
+      }));
+    }
+  }
+  await despesas.save(despesas.create({
+    ...lancada, categoriaId: manutencao.id, descricao: 'Conserto do portão',
+    valorCentavos: 65000, vencimento: dia(mesAtual, 28), observacao: 'Orçamento aprovado pela direção.',
   }));
 
   console.log(`\nPronto! Todos os usuários têm a senha: ${SENHA_DEMO}`);

@@ -11,44 +11,18 @@ import { FINANCAS } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { Turma } from '../turmas/turma.entity';
 import { Cobranca, NOME_TIPO_COBRANCA, TipoCobranca } from './cobranca.entity';
+import { dataExiste, hojeEmBrasilia, nomeDoMes, somarMeses } from './datas';
+import { Despesa } from './despesa.entity';
 import {
   AtualizarCobrancaDto,
   CriarCobrancaDto,
   RegistrarPagamentoDto,
 } from './dto/cobranca.dto';
 
-const TZ = 'America/Sao_Paulo';
-
 export type Situacao = 'pendente' | 'atrasada' | 'paga' | 'cancelada';
 
-/** "2026-10-13": hoje no fuso de Brasília. */
-const hojeEmBrasilia = () =>
-  new Date().toLocaleDateString('en-CA', { timeZone: TZ });
-
-/** Recusa datas que não existem, como 2026-02-31. */
-function dataExiste(data: string) {
-  const [a, m, d] = data.split('-').map(Number);
-  const dt = new Date(Date.UTC(a, m - 1, d));
-  return (
-    dt.getUTCFullYear() === a &&
-    dt.getUTCMonth() === m - 1 &&
-    dt.getUTCDate() === d
-  );
-}
-
-/** Mesmo dia, `meses` depois; dia 31 num mês de 30 vira o último dia. */
-function somarMeses(data: string, meses: number) {
-  const [a, m, d] = data.split('-').map(Number);
-  const ultimoDia = new Date(Date.UTC(a, m - 1 + meses + 1, 0)).getUTCDate();
-  const dt = new Date(Date.UTC(a, m - 1 + meses, Math.min(d, ultimoDia)));
-  return dt.toISOString().slice(0, 10);
-}
-
-const nomeDoMes = (data: string) =>
-  new Date(`${data}T12:00:00Z`).toLocaleDateString('pt-BR', {
-    month: 'long',
-    timeZone: 'UTC',
-  });
+/** O que entrou de fato (com juros ou desconto), ou o valor cheio. */
+const RECEBIDO = 'COALESCE(c.valor_pago_centavos, c.valor_centavos)';
 
 function situacao(c: Cobranca, hoje: string): Situacao {
   if (c.cancelada) return 'cancelada';
@@ -68,6 +42,7 @@ export class FinanceiroService {
     private readonly cobrancas: Repository<Cobranca>,
     @InjectRepository(Aluno) private readonly alunos: Repository<Aluno>,
     @InjectRepository(Turma) private readonly turmas: Repository<Turma>,
+    @InjectRepository(Despesa) private readonly despesas: Repository<Despesa>,
     private readonly acesso: AcessoService,
   ) {}
 
@@ -75,16 +50,25 @@ export class FinanceiroService {
   async resumo(turmaId?: string) {
     const hoje = hojeEmBrasilia();
     const inicioDoMes = `${hoje.slice(0, 7)}-01`;
-    const soma = (filtro: string) =>
-      `COALESCE(SUM(c.valor_centavos) FILTER (WHERE ${filtro}), 0)`;
+    const soma = (filtro: string, valor = 'c.valor_centavos') =>
+      `COALESCE(SUM(${valor}) FILTER (WHERE ${filtro}), 0)`;
 
-    const [alunos, turmas, linhas] = await Promise.all([
+    const [alunos, turmas, despesasPagas, linhas] = await Promise.all([
       this.alunos.find({
         where: turmaId ? { turma: { id: turmaId } } : {},
         relations: { turma: true, responsaveis: true },
         order: { nome: 'ASC' },
       }),
       this.turmas.find({ order: { anoLetivo: 'DESC', nome: 'ASC' } }),
+      // Despesas da escola pagas neste mês, para o saldo.
+      this.despesas
+        .createQueryBuilder('d')
+        .select(
+          'COALESCE(SUM(COALESCE(d.valor_pago_centavos, d.valor_centavos)), 0)',
+          'total',
+        )
+        .where('d.pago_em >= :inicioDoMes', { inicioDoMes })
+        .getRawOne<{ total: string }>(),
       this.cobrancas
         .createQueryBuilder('c')
         .select('c.aluno_id', 'alunoId')
@@ -96,8 +80,8 @@ export class FinanceiroService {
           soma('c.pago_em IS NULL AND c.vencimento < :hoje'),
           'atrasado',
         )
-        .addSelect(soma('c.pago_em IS NOT NULL'), 'pago')
-        .addSelect(soma('c.pago_em >= :inicioDoMes'), 'pagoNoMes')
+        .addSelect(soma('c.pago_em IS NOT NULL', RECEBIDO), 'pago')
+        .addSelect(soma('c.pago_em >= :inicioDoMes', RECEBIDO), 'pagoNoMes')
         .addSelect(
           `TO_CHAR(MIN(c.vencimento) FILTER (WHERE c.pago_em IS NULL), 'YYYY-MM-DD')`,
           'proximoVencimento',
@@ -121,6 +105,8 @@ export class FinanceiroService {
       atrasadoCentavos: 0,
       recebidoNoMesCentavos: 0,
       alunosEmAtraso: 0,
+      /** Da escola toda (não muda com o filtro de turma). */
+      despesasPagasNoMesCentavos: Number(despesasPagas?.total ?? 0),
     };
     const lista = alunos.map((a) => {
       const l = porAluno.get(a.id);
@@ -173,7 +159,9 @@ export class FinanceiroService {
       const s = situacao(c, hoje);
       if (s === 'pendente') totais.aVencerCentavos += c.valorCentavos;
       if (s === 'atrasada') totais.atrasadoCentavos += c.valorCentavos;
-      if (s === 'paga') totais.pagoCentavos += c.valorCentavos;
+      if (s === 'paga') {
+        totais.pagoCentavos += c.valorPagoCentavos ?? c.valorCentavos;
+      }
     }
 
     return {
@@ -257,7 +245,7 @@ export class FinanceiroService {
     const mudaAlgo = Object.values(resto).some((v) => v !== undefined);
     if (cobranca.pagoEm && mudaAlgo) {
       throw new BadRequestException(
-        'Esta cobrança já foi paga. Desfaça a baixa antes de alterar.',
+        'Esta cobrança já foi paga. Desfaça o pagamento antes de alterar.',
       );
     }
     if (dto.vencimento && !dataExiste(dto.vencimento)) {
@@ -282,7 +270,7 @@ export class FinanceiroService {
     return this.paraResposta(cobranca, hojeEmBrasilia(), true);
   }
 
-  /** Dá baixa: a escola recebeu. */
+  /** A escola recebeu: registra a data, a forma e o valor que entrou. */
   async registrarPagamento(id: string, dto: RegistrarPagamentoDto) {
     const cobranca = await this.buscar(id);
     const hoje = hojeEmBrasilia();
@@ -299,11 +287,13 @@ export class FinanceiroService {
     }
     cobranca.pagoEm = dto.pagoEm;
     cobranca.formaPagamento = dto.formaPagamento;
+    cobranca.valorPagoCentavos =
+      dto.valorPagoCentavos ?? cobranca.valorCentavos;
     await this.cobrancas.save(cobranca);
     return this.paraResposta(cobranca, hoje, true);
   }
 
-  /** Desfaz a baixa (lançada por engano). */
+  /** Desfaz o pagamento (registrado por engano). */
   async desfazerPagamento(id: string) {
     const cobranca = await this.buscar(id);
     if (!cobranca.pagoEm) {
@@ -311,6 +301,7 @@ export class FinanceiroService {
     }
     cobranca.pagoEm = null;
     cobranca.formaPagamento = null;
+    cobranca.valorPagoCentavos = null;
     await this.cobrancas.save(cobranca);
     return this.paraResposta(cobranca, hojeEmBrasilia(), true);
   }
@@ -334,6 +325,7 @@ export class FinanceiroService {
       valorCentavos: c.valorCentavos,
       vencimento: c.vencimento,
       pagoEm: c.pagoEm,
+      valorPagoCentavos: c.valorPagoCentavos,
       formaPagamento: c.formaPagamento,
       situacao: situacao(c, hoje),
       ...(equipe

@@ -5,6 +5,7 @@ import { Aniversarios1791400000000 } from './1791400000000-Aniversarios';
 import { FichaProfessor1791500000000 } from './1791500000000-FichaProfessor';
 import { TokenAgenda1791600000000 } from './1791600000000-TokenAgenda';
 import { Financeiro1791700000000 } from './1791700000000-Financeiro';
+import { Despesas1791800000000 } from './1791800000000-Despesas';
 
 /**
  * Todas as migrations, em ordem. Ao gerar uma nova, adicione-a aqui.
@@ -18,4 +19,5 @@ export const MIGRACOES = [
   FichaProfessor1791500000000,
   TokenAgenda1791600000000,
   Financeiro1791700000000,
+  Despesas1791800000000,
 ];
