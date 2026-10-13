@@ -13,7 +13,8 @@ Comunicação entre a escola e as famílias dos alunos: **comunicados com confir
 | --------------- | ------------------------------------------------------------------------------------------------- |
 | **Direção** (`admin`) | Tudo: cadastra usuários, turmas e alunos; publica para a escola inteira; vê quem confirmou cada comunicado; lança notas e edita fichas de saúde; edita a ficha dos professores (com anotações internas). |
 | **Professor**   | Vê as suas turmas e alunos; publica comunicados, eventos e provas para as suas turmas; lança notas; consulta alergias; vê o contato dos colegas e edita a própria ficha; responde às famílias. |
-| **Responsável** | Vê os filhos, os comunicados, a agenda, as provas e o boletim deles; confirma ciência; preenche a ficha de saúde; conversa com a escola. |
+| **Responsável** | Vê os filhos, os comunicados, a agenda, as provas e o boletim deles; confirma ciência; preenche a ficha de saúde; conversa com a escola; consulta as cobranças dos filhos. |
+| **Financeiro**  | Só as finanças: lança cobranças (matrícula, mensalidade, uniforme, livros) para um aluno ou para a turma, dá baixa, edita e cancela; vê a lista de alunos com o contato dos responsáveis. Não acessa comunicados, agenda, mensagens, boletim nem saúde. |
 
 A regra de "quem enxerga o quê" está num só lugar: `back/src/common/acesso/acesso.service.ts`.
 
@@ -47,6 +48,7 @@ Todos com a senha **`Senha@123`**:
 | Direção                       | `direcao@muralflow.com.br` |
 | Professora do 5º Ano A        | `carla@muralflow.com.br`   |
 | Professor do 2º Ano B         | `roberto@muralflow.com.br` |
+| Financeiro                    | `financeiro@muralflow.com.br` |
 | Mãe do Lucas e da Beatriz     | `maria@email.com`              |
 | Pai do Lucas e da Beatriz     | `joao@email.com`               |
 | Mãe do Gabriel                | `fernanda@email.com`           |
@@ -55,10 +57,12 @@ Todos com a senha **`Senha@123`**:
 
 Tudo exige `Authorization: Bearer <token>`, exceto `POST /auth/entrar` e `GET /saude`.
 
+O papel **financeiro** é bloqueado por padrão (`PAPEIS_RESTRITOS`): só entra nas rotas que o citam em `@Papeis`. "Todos", na tabela, não o inclui, a menos que a linha diga. Uma rota nova fica fechada para ele até ser liberada.
+
 | Método | Rota                          | Quem             |
 | ------ | ----------------------------- | ---------------- |
 | POST   | `/auth/entrar`                | público          |
-| GET/PATCH | `/usuarios/eu`             | todos            |
+| GET/PATCH | `/usuarios/eu`             | todos, inclusive financeiro |
 | GET    | `/usuarios?papel=`            | equipe           |
 | POST/PATCH | `/usuarios`, `/usuarios/:id` | direção       |
 | GET    | `/turmas`, `/alunos`          | todos (filtrado) |
@@ -77,6 +81,12 @@ Tudo exige `Authorization: Bearer <token>`, exceto `POST /auth/entrar` e `GET /s
 | GET    | `/boletim/disciplinas`        | todos            |
 | GET    | `/boletim/alunos/:id?ano=`    | todos (filtrado) |
 | GET/PUT | `/boletim/turmas/:id?disciplina=&bimestre=` | equipe (turmas dela) |
+| GET    | `/alunos`                     | financeiro também (todos os alunos, sem a ficha de saúde) |
+| GET    | `/financeiro/resumo?turmaId=` | financeiro, direção |
+| GET    | `/financeiro/alunos/:id`      | financeiro, direção; responsável só dos próprios filhos |
+| POST   | `/financeiro/cobrancas`       | financeiro, direção (um aluno ou a turma; `parcelas` mensais) |
+| PATCH  | `/financeiro/cobrancas/:id`   | financeiro, direção (editar, cancelar, reativar) |
+| POST/DELETE | `/financeiro/cobrancas/:id/pagamento` | financeiro, direção (dar e desfazer baixa) |
 
 ## Banco em produção (Supabase, Neon, Render…)
 

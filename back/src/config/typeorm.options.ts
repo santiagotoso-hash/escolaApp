@@ -9,6 +9,7 @@ import { Evento } from '../eventos/evento.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
 import { Nota } from '../boletim/nota.entity';
+import { Cobranca } from '../financeiro/cobranca.entity';
 import { MIGRACOES } from '../database/migrations';
 
 export const ENTIDADES = [
@@ -21,6 +22,7 @@ export const ENTIDADES = [
   Conversa,
   Mensagem,
   Nota,
+  Cobranca,
 ];
 
 type Env = (key: string) => string | undefined;

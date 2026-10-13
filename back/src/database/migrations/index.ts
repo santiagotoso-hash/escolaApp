@@ -4,6 +4,7 @@ import { ProvasBoletimSaude1791340000000 } from './1791340000000-ProvasBoletimSa
 import { Aniversarios1791400000000 } from './1791400000000-Aniversarios';
 import { FichaProfessor1791500000000 } from './1791500000000-FichaProfessor';
 import { TokenAgenda1791600000000 } from './1791600000000-TokenAgenda';
+import { Financeiro1791700000000 } from './1791700000000-Financeiro';
 
 /**
  * Todas as migrations, em ordem. Ao gerar uma nova, adicione-a aqui.
@@ -16,4 +17,5 @@ export const MIGRACOES = [
   Aniversarios1791400000000,
   FichaProfessor1791500000000,
   TokenAgenda1791600000000,
+  Financeiro1791700000000,
 ];

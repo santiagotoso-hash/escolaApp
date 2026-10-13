@@ -12,7 +12,11 @@ import {
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Papeis } from '../common/decorators/papeis.decorator';
 import { UsuarioAtual } from '../common/decorators/usuario-atual.decorator';
-import { EQUIPE, Papel } from '../common/enums/papel.enum';
+import {
+  EQUIPE,
+  Papel,
+  TODOS_OS_PAPEIS,
+} from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import {
   AtualizarPerfilDto,
@@ -29,11 +33,13 @@ export class UsuariosController {
 
   /** Perfil de quem está logado, com filhos (responsável) ou turmas (professor). */
   @Get('eu')
+  @Papeis(...TODOS_OS_PAPEIS)
   eu(@UsuarioAtual() usuario: UsuarioAutenticado) {
     return this.usuarios.buscar(usuario.id);
   }
 
   @Patch('eu')
+  @Papeis(...TODOS_OS_PAPEIS)
   atualizarPerfil(
     @UsuarioAtual() usuario: UsuarioAutenticado,
     @Body() dto: AtualizarPerfilDto,

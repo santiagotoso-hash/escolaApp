@@ -13,7 +13,7 @@ import {
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Papeis } from '../common/decorators/papeis.decorator';
 import { UsuarioAtual } from '../common/decorators/usuario-atual.decorator';
-import { Papel } from '../common/enums/papel.enum';
+import { Papel, TODOS_OS_PAPEIS } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { AlunosService } from './alunos.service';
 import {
@@ -30,6 +30,7 @@ export class AlunosController {
   constructor(private readonly alunos: AlunosService) {}
 
   @Get()
+  @Papeis(...TODOS_OS_PAPEIS)
   @ApiQuery({ name: 'turmaId', required: false })
   listar(
     @UsuarioAtual() usuario: UsuarioAutenticado,

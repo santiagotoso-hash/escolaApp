@@ -1,7 +1,7 @@
 /**
  * Dados de demonstração: uma escola com direção, 2 professores, 3 famílias,
  * turmas, alunos (com ficha de saúde), comunicados, eventos, provas, notas
- * do boletim e uma conversa.
+ * do boletim, uma conversa e as cobranças do ano (com o usuário do financeiro).
  *
  *   npm run seed
  *
@@ -20,6 +20,11 @@ import {
   Comunicado,
 } from '../comunicados/comunicado.entity';
 import { Evento, TipoEvento } from '../eventos/evento.entity';
+import {
+  Cobranca,
+  FormaPagamento,
+  TipoCobranca,
+} from '../financeiro/cobranca.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
 import { Turma, Turno } from '../turmas/turma.entity';
@@ -66,6 +71,7 @@ async function main() {
   await usuarios.update(profRoberto.id, {
     telefone: '(11) 96666-5678', dataNascimento: '1979-11-03', endereco: 'Av. Brasil, 1200, ap. 52 — Centro, São Paulo/SP',
   });
+  const financeiro = await criar('Paulo Ferreira', 'financeiro@muralflow.com.br', Papel.FINANCEIRO);
   const maria = await criar('Maria Souza', 'maria@email.com', Papel.RESPONSAVEL, '(11) 98765-4321');
   const joao = await criar('João Souza', 'joao@email.com', Papel.RESPONSAVEL, '(11) 91234-5678');
   const fernanda = await criar('Fernanda Oliveira', 'fernanda@email.com', Papel.RESPONSAVEL, '(21) 99876-1234');
@@ -173,11 +179,46 @@ async function main() {
   await mensagens.save(mensagens.create({ conversa, autor: maria, texto: 'Bom dia, professora! Na sexta o Lucas vai sair às 10h para uma consulta médica. O pai vai buscar.' }));
   await mensagens.save(mensagens.create({ conversa, autor: profCarla, texto: 'Bom dia, Maria! Anotado. Vou deixar a lição de casa separada para ele. Obrigada por avisar!' }));
 
+  // Financeiro: matrícula em janeiro e mensalidades de fevereiro a dezembro,
+  // pagas até o mês passado. O Gabriel ficou devendo a do mês passado, para
+  // a tela ter um aluno em atraso.
+  const cobrancas = ds.getRepository(Cobranca);
+  const mesAtual = new Date().getMonth() + 1;
+  const dia = (mes: number, d: number) =>
+    `${ano}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const nomeMes = (mes: number) =>
+    new Date(Date.UTC(ano, mes - 1, 15)).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' });
+  const lancada = { lancadaPorId: financeiro.id };
+  for (const aluno of [lucas, beatriz, gabriel]) {
+    await cobrancas.save(cobrancas.create({
+      ...lancada, alunoId: aluno.id, tipo: TipoCobranca.MATRICULA, descricao: `Matrícula ${ano}`,
+      valorCentavos: 120000, vencimento: dia(1, 10), pagoEm: dia(1, 8), formaPagamento: FormaPagamento.PIX,
+    }));
+    for (let mes = 2; mes <= 12; mes++) {
+      const paga = mes < mesAtual && !(aluno === gabriel && mes === mesAtual - 1);
+      await cobrancas.save(cobrancas.create({
+        ...lancada, alunoId: aluno.id, tipo: TipoCobranca.MENSALIDADE,
+        descricao: `Mensalidade de ${nomeMes(mes)} (${mes - 1}/11)`,
+        valorCentavos: 85000, vencimento: dia(mes, 10),
+        pagoEm: paga ? dia(mes, 8) : null, formaPagamento: paga ? FormaPagamento.BOLETO : null,
+      }));
+    }
+  }
+  await cobrancas.save(cobrancas.create({
+    ...lancada, alunoId: lucas.id, tipo: TipoCobranca.UNIFORME, descricao: 'Camiseta e bermuda tam. 10',
+    valorCentavos: 18990, vencimento: dia(2, 15), pagoEm: dia(2, 12), formaPagamento: FormaPagamento.CARTAO,
+  }));
+  await cobrancas.save(cobrancas.create({
+    ...lancada, alunoId: beatriz.id, tipo: TipoCobranca.LIVROS, descricao: `Kit de livros ${ano + 1}`,
+    valorCentavos: 45000, vencimento: dia(12, 20), observacao: 'Entrega dos livros na 1ª semana de aula.',
+  }));
+
   console.log(`\nPronto! Todos os usuários têm a senha: ${SENHA_DEMO}`);
   console.table([
     { papel: 'Direção', email: diretora.email },
     { papel: 'Professora 5º A', email: profCarla.email },
     { papel: 'Professor 2º B', email: profRoberto.email },
+    { papel: 'Financeiro', email: financeiro.email },
     { papel: 'Mãe (Lucas e Beatriz)', email: maria.email },
     { papel: 'Pai (Lucas e Beatriz)', email: joao.email },
     { papel: 'Mãe (Gabriel)', email: fernanda.email },

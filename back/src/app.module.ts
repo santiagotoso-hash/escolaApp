@@ -14,6 +14,7 @@ import { ComunicadosModule } from './comunicados/comunicados.module';
 import { envValidationSchema } from './config/env.validation';
 import { typeormOptions } from './config/typeorm.options';
 import { EventosModule } from './eventos/eventos.module';
+import { FinanceiroModule } from './financeiro/financeiro.module';
 import { MensagensModule } from './mensagens/mensagens.module';
 import { NotificacoesModule } from './notificacoes/notificacoes.module';
 import { TurmasModule } from './turmas/turmas.module';
@@ -52,6 +53,7 @@ class SaudeController {
     MensagensModule,
     BoletimModule,
     AniversariosModule,
+    FinanceiroModule,
   ],
   controllers: [SaudeController],
   providers: [

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PAPEIS_KEY } from '../decorators/papeis.decorator';
-import { Papel } from '../enums/papel.enum';
+import { Papel, PAPEIS_RESTRITOS } from '../enums/papel.enum';
 
 @Injectable()
 export class PapeisGuard implements CanActivate {
@@ -12,8 +12,12 @@ export class PapeisGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!papeis?.length) return true;
     const { user } = context.switchToHttp().getRequest();
+    // Papel restrito: só passa onde a rota o cita, mesmo sem @Papeis.
+    if (user && PAPEIS_RESTRITOS.includes(user.papel)) {
+      return !!papeis?.includes(user.papel);
+    }
+    if (!papeis?.length) return true;
     return !!user && papeis.includes(user.papel);
   }
 }

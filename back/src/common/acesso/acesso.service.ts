@@ -11,6 +11,8 @@ import type { UsuarioAutenticado } from '../usuario-autenticado';
  *  - ADMIN: tudo.
  *  - PROFESSOR: as turmas em que dá aula e os alunos delas.
  *  - RESPONSAVEL: os próprios filhos e as turmas deles.
+ *  - FINANCEIRO: todos os alunos, mas só chega às rotas que o liberam
+ *    (ver PAPEIS_RESTRITOS): finanças e a lista de alunos.
  */
 @Injectable()
 export class AcessoService {
@@ -22,6 +24,7 @@ export class AcessoService {
   /** IDs das turmas visíveis. `null` significa "todas" (admin). */
   async turmaIdsVisiveis(usuario: UsuarioAutenticado): Promise<string[] | null> {
     if (usuario.papel === Papel.ADMIN) return null;
+    if (usuario.papel === Papel.FINANCEIRO) return null;
 
     if (usuario.papel === Papel.PROFESSOR) {
       const turmas = await this.turmas
@@ -53,6 +56,7 @@ export class AcessoService {
     if (!aluno) throw new NotFoundException('Aluno não encontrado');
 
     if (usuario.papel === Papel.ADMIN) return aluno;
+    if (usuario.papel === Papel.FINANCEIRO) return aluno;
 
     if (usuario.papel === Papel.RESPONSAVEL) {
       if (aluno.responsaveis.some((r) => r.id === usuario.id)) return aluno;

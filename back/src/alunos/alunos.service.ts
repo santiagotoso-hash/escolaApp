@@ -28,7 +28,10 @@ export class AlunosService {
     private readonly acesso: AcessoService,
   ) {}
 
-  /** Admin: todos. Professor: alunos das suas turmas. Responsável: filhos. */
+  /**
+   * Admin: todos. Professor: alunos das suas turmas. Responsável: filhos.
+   * Financeiro: todos, sem a ficha de saúde.
+   */
   async listar(usuario: UsuarioAutenticado, turmaId?: string) {
     const qb = this.alunos
       .createQueryBuilder('a')
@@ -48,7 +51,17 @@ export class AlunosService {
     }
     if (turmaId) qb.andWhere('t.id = :turmaId', { turmaId });
 
-    return qb.getMany();
+    const alunos = await qb.getMany();
+    if (usuario.papel === Papel.FINANCEIRO) {
+      for (const a of alunos) {
+        a.alergias = null;
+        a.restricoesAlimentares = null;
+        a.medicamentos = null;
+        a.observacoesSaude = null;
+        a.saudeAtualizadaEm = null;
+      }
+    }
+    return alunos;
   }
 
   buscar(usuario: UsuarioAutenticado, id: string) {
