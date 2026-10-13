@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Aluno } from '../alunos/aluno.entity';
 import { AcessoService } from '../common/acesso/acesso.service';
-import { FINANCAS } from '../common/enums/papel.enum';
+import { FINANCAS, Papel } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { Turma } from '../turmas/turma.entity';
 import { Cobranca, NOME_TIPO_COBRANCA, TipoCobranca } from './cobranca.entity';
@@ -140,6 +140,41 @@ export class FinanceiroService {
       turmas: turmas.map((t) => ({ id: t.id, nome: t.nome })),
       alunos: lista,
     };
+  }
+
+  /**
+   * Alunos com cobrança vencida e não paga: quanto devem, quantas cobranças
+   * e desde quando. Financeiro e direção recebem todos; a família, só os
+   * próprios filhos. Serve para destacar o aluno na tela Alunos.
+   */
+  async pendencias(usuario: UsuarioAutenticado) {
+    const qb = this.cobrancas
+      .createQueryBuilder('c')
+      .select('c.aluno_id', 'alunoId')
+      .addSelect('SUM(c.valor_centavos)', 'atrasado')
+      .addSelect('COUNT(*)', 'quantidade')
+      .addSelect(`TO_CHAR(MIN(c.vencimento), 'YYYY-MM-DD')`, 'desde')
+      .where('c.cancelada = false AND c.pago_em IS NULL')
+      .andWhere('c.vencimento < :hoje', { hoje: hojeEmBrasilia() })
+      .groupBy('c.aluno_id');
+    if (usuario.papel === Papel.RESPONSAVEL) {
+      qb.andWhere(
+        'c.aluno_id IN (SELECT ar.aluno_id FROM aluno_responsaveis ar WHERE ar.responsavel_id = :uid)',
+        { uid: usuario.id },
+      );
+    }
+    const linhas = await qb.getRawMany<{
+      alunoId: string;
+      atrasado: string;
+      quantidade: string;
+      desde: string;
+    }>();
+    return linhas.map((l) => ({
+      alunoId: l.alunoId,
+      atrasadoCentavos: Number(l.atrasado),
+      quantidade: Number(l.quantidade),
+      desde: l.desde,
+    }));
   }
 
   /** Extrato de um aluno. A família só chega aos próprios filhos. */

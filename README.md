@@ -83,6 +83,7 @@ O papel **financeiro** é bloqueado por padrão (`PAPEIS_RESTRITOS`): só entra 
 | GET/PUT | `/boletim/turmas/:id?disciplina=&bimestre=` | equipe (turmas dela) |
 | GET    | `/alunos`                     | financeiro também (todos os alunos, sem a ficha de saúde) |
 | GET    | `/financeiro/resumo?turmaId=` | financeiro, direção |
+| GET    | `/financeiro/pendencias`      | financeiro, direção; responsável só dos próprios filhos (quem tem cobrança vencida) |
 | GET    | `/financeiro/alunos/:id`      | financeiro, direção; responsável só dos próprios filhos |
 | POST   | `/financeiro/cobrancas`       | financeiro, direção (um aluno ou a turma; `parcelas` mensais) |
 | PATCH  | `/financeiro/cobrancas/:id`   | financeiro, direção (editar, cancelar, reativar) |

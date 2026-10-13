@@ -39,6 +39,13 @@ export class FinanceiroController {
     return this.financeiro.resumo(turmaId);
   }
 
+  /** Quem está com cobrança vencida (a família: só os próprios filhos). */
+  @Get('pendencias')
+  @Papeis(...FINANCAS, Papel.RESPONSAVEL)
+  pendencias(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    return this.financeiro.pendencias(usuario);
+  }
+
   /** Extrato do aluno. A família vê só os próprios filhos. */
   @Get('alunos/:alunoId')
   @Papeis(...FINANCAS, Papel.RESPONSAVEL)
